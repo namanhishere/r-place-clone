@@ -1,0 +1,7 @@
+*.zip
+node_modules/
+*.mp4
+docker/
+log
+venv/
+.env
