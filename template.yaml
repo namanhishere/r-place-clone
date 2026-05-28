@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: r-place clone serverless backend
+
+Globals:
+  Function:
+    Runtime: nodejs18.x
+    Timeout: 10
+    MemorySize: 128
+    Environment:
+      Variables:
+        PIXELS_TABLE: !Ref PixelsTable
+
+Resources:
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+
+  PixelsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pixelId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pixelId
+          KeyType: HASH
+
+  GetCanvasFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handler.getCanvas
+      CodeUri: .
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref PixelsTable
+      Events:
+        GetCanvas:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /canvas
+            Method: GET
+
+  PlacePixelFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handler.placePixel
+      CodeUri: .
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref PixelsTable
+      Events:
+        PlacePixel:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /pixel
+            Method: PUT
+
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
