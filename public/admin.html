@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{BRAND_ADMIN_NAME}}</title>
+<style>
+:root{
+  --bg:#111;--surface:#1a1a1a;--surface-2:#222;--surface-3:#2a2a2a;
+  --border:#333;--border-strong:#444;
+  --text:#f5f5f5;--text-dim:#a8a8a8;--text-faint:#6f6f6f;
+  --accent:#4CAF50;--accent-hover:#43a047;--accent-soft:rgba(76,175,80,0.12);
+  --danger:#c1292e;--danger-hover:#a91f24;--danger-soft:rgba(193,41,46,0.12);
+  --info:#3690EA;--warn:#FFA800;
+  --radius:14px;--radius-sm:9px;--radius-pill:999px;
+  --shadow:0 6px 22px rgba(0,0,0,0.45);--shadow-sm:0 2px 8px rgba(0,0,0,0.35);
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,'Helvetica Neue',sans-serif;
+  --mono:'SFMono-Regular',ui-monospace,Menlo,Consolas,'Liberation Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:radial-gradient(1200px 600px at 85% -10%,rgba(76,175,80,0.06),transparent 60%),var(--bg);
+  color:var(--text);font-family:var(--font);line-height:1.5;
+  min-height:100vh;-webkit-font-smoothing:antialiased;
+}
+a{color:var(--accent);text-decoration:none;}
+button{font-family:inherit;}
+
+/* ---------- App shell ---------- */
+.app{display:none;}
+.app.visible{display:block;}
+header.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);
+  padding:var(--space-3) var(--space-5);
+  background:rgba(17,17,17,0.82);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:var(--space-3);font-weight:700;font-size:1.15rem;letter-spacing:-0.01em;}
+.brand .dot{width:11px;height:11px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);}
+.brand .muted{color:var(--text-faint);font-weight:500;font-size:0.8rem;}
+.userbox{display:flex;align-items:center;gap:var(--space-3);}
+.userbox .who{display:flex;align-items:center;gap:var(--space-2);}
+.avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border-strong);background:var(--surface-3);}
+.avatar.placeholder{display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text-dim);font-size:0.85rem;}
+.uname{font-weight:600;font-size:0.92rem;}
+.uname small{display:block;color:var(--text-faint);font-weight:500;font-size:0.72rem;}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);
+  padding:9px 16px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);
+  background:var(--surface-3);color:var(--text);font-weight:600;font-size:0.88rem;
+  cursor:pointer;transition:transform .08s ease,background .15s ease,border-color .15s ease,opacity .15s ease;
+}
+.btn:hover{background:#343434;border-color:#555;}
+.btn:active{transform:translateY(1px);}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.btn[disabled]{opacity:.55;cursor:not-allowed;}
+.btn.primary{background:var(--accent);border-color:transparent;color:#0b1f0c;}
+.btn.primary:hover{background:var(--accent-hover);}
+.btn.danger{background:transparent;border-color:var(--danger);color:#ff6b6f;}
+.btn.danger:hover{background:var(--danger-soft);}
+.btn.ghost{background:transparent;border-color:var(--border);}
+.btn.ghost:hover{background:var(--surface-2);}
+.btn.sm{padding:6px 11px;font-size:0.8rem;}
+.btn.full{width:100%;}
+.btn.busy{position:relative;color:transparent !important;}
+.btn.busy::after{
+  content:"";position:absolute;width:15px;height:15px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ---------- Layout grid ---------- */
+main{max-width:1400px;margin:0 auto;padding:var(--space-5);}
+.grid{
+  display:grid;gap:var(--space-5);
+  grid-template-columns:repeat(12,1fr);
+  align-items:start;
+}
+.card{
+  grid-column:span 12;
+  background:linear-gradient(180deg,var(--surface),#161616);
+  border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.card .head{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);
+  padding:var(--space-4) var(--space-5);border-bottom:1px solid var(--border);
+}
+.card .head h2{margin:0;font-size:0.98rem;font-weight:700;letter-spacing:-0.01em;display:flex;align-items:center;gap:var(--space-2);}
+.card .head h2 .ico{font-size:1.05rem;line-height:1;}
+.card .head h2 .ico svg{width:18px;height:18px;display:block;color:var(--accent);}
+.card .body{padding:var(--space-5);display:flex;flex-direction:column;gap:var(--space-4);}
+@media(min-width:760px){
+  .col-6{grid-column:span 6;}
+  .col-8{grid-column:span 8;}
+  .col-4{grid-column:span 4;}
+}
+@media(min-width:1100px){
+  .lg-6{grid-column:span 6;}
+  .lg-4{grid-column:span 4;}
+  .lg-8{grid-column:span 8;}
+}
+
+/* ---------- Forms ---------- */
+label.field{display:flex;flex-direction:column;gap:6px;font-size:0.8rem;font-weight:600;color:var(--text-dim);}
+input,select{
+  width:100%;padding:10px 12px;border-radius:var(--radius-sm);
+  background:var(--surface-2);border:1px solid var(--border-strong);color:var(--text);
+  font-size:0.9rem;font-family:inherit;transition:border-color .15s ease,background .15s ease;
+}
+input:focus,select:focus{outline:none;border-color:var(--accent);background:#1d1d1d;}
+input::placeholder{color:var(--text-faint);}
+.row{display:flex;gap:var(--space-3);flex-wrap:wrap;}
+.row > *{flex:1 1 0;min-width:0;}
+.row.tight{gap:var(--space-2);}
+.inline{display:flex;align-items:flex-end;gap:var(--space-3);flex-wrap:wrap;}
+.seg{display:flex;gap:6px;flex-wrap:wrap;}
+.seg .opt{
+  flex:1 1 70px;text-align:center;padding:9px 6px;border-radius:var(--radius-sm);
+  border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text-dim);
+  cursor:pointer;font-weight:600;font-size:0.84rem;transition:all .12s ease;user-select:none;
+}
+.seg .opt:hover{border-color:#555;color:var(--text);}
+.seg .opt.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+.seg .opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+/* ---------- Stats ---------- */
+.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-3);}
+.stat{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:var(--space-3) var(--space-4);
+}
+.stat .k{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-faint);font-weight:700;}
+.stat .v{font-size:1.5rem;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;}
+.stat .v.accent{color:var(--accent);}
+.preview-wrap{
+  display:flex;align-items:center;justify-content:center;
+  background:
+    linear-gradient(45deg,#1c1c1c 25%,transparent 25%),
+    linear-gradient(-45deg,#1c1c1c 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#1c1c1c 75%),
+    linear-gradient(-45deg,transparent 75%,#1c1c1c 75%),var(--surface-2);
+  background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0;
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:var(--space-4);min-height:200px;position:relative;
+}
+#preview{image-rendering:pixelated;image-rendering:crisp-edges;max-width:100%;border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,0.06),0 8px 24px rgba(0,0,0,0.5);}
+
+/* ---------- Lists ---------- */
+.list{display:flex;flex-direction:column;gap:var(--space-2);max-height:340px;overflow-y:auto;padding-right:4px;}
+.list::-webkit-scrollbar{width:8px;}
+.list::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:8px;}
+.list::-webkit-scrollbar-track{background:transparent;}
+.li{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);
+  background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 13px;transition:border-color .15s ease,background .15s ease;
+}
+.li:hover{border-color:var(--border-strong);}
+.li .li-main{min-width:0;display:flex;flex-direction:column;gap:2px;}
+.li .li-main .t{font-weight:600;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.li .li-main .s{font-size:0.76rem;color:var(--text-faint);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.empty{color:var(--text-faint);font-size:0.86rem;text-align:center;padding:var(--space-5) var(--space-3);font-style:italic;}
+
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--radius-pill);font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;}
+.badge.fired{background:var(--accent-soft);color:var(--accent);}
+.badge.pending{background:rgba(54,144,234,0.14);color:#7cb8f5;}
+.badge.live{background:var(--accent-soft);color:var(--accent);}
+.badge.live .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ---------- Activity table ---------- */
+.table-scroll{overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);}
+table.activity{width:100%;border-collapse:collapse;font-size:0.82rem;}
+table.activity thead th{
+  position:sticky;top:0;background:var(--surface-3);text-align:left;
+  padding:9px 12px;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;
+  color:var(--text-dim);font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap;z-index:1;
+}
+table.activity tbody td{padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+table.activity tbody tr:last-child td{border-bottom:none;}
+table.activity tbody tr:hover{background:var(--surface-2);}
+table.activity .swatch{width:16px;height:16px;border-radius:4px;border:1px solid rgba(255,255,255,0.18);display:inline-block;vertical-align:middle;}
+table.activity .mono{font-family:var(--mono);color:var(--text-dim);}
+table.activity .coord{font-family:var(--mono);font-weight:600;}
+.muted-time{color:var(--text-faint);}
+
+/* ---------- Hint / divider ---------- */
+.hint{font-size:0.78rem;color:var(--text-faint);}
+.divider{height:1px;background:var(--border);margin:var(--space-1) 0;border:none;}
+.head-actions{display:flex;align-items:center;gap:var(--space-2);}
+
+/* ---------- Auth gate ---------- */
+.gate{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:var(--space-5);
+}
+.gate.hidden{display:none;}
+.gate-card{
+  text-align:center;max-width:420px;width:100%;
+  background:linear-gradient(180deg,var(--surface),#161616);
+  border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:var(--space-6) var(--space-5);
+}
+.gate-card .glyph{
+  width:64px;height:64px;border-radius:18px;margin:0 auto var(--space-4);
+  display:flex;align-items:center;justify-content:center;font-size:1.8rem;
+  background:var(--accent-soft);border:1px solid var(--accent);
+}
+.gate-card h1{font-size:1.4rem;margin:0 0 var(--space-2);letter-spacing:-0.02em;}
+.gate-card p{color:var(--text-dim);margin:0 0 var(--space-5);font-size:0.92rem;}
+.discord-btn{
+  display:inline-flex;align-items:center;gap:var(--space-2);width:100%;justify-content:center;
+  padding:13px 18px;border-radius:var(--radius-sm);background:#5865F2;color:#fff;
+  font-weight:700;font-size:0.95rem;transition:background .15s ease,transform .08s ease;
+}
+.discord-btn:hover{background:#4752c4;}
+.discord-btn:active{transform:translateY(1px);}
+
+/* ---------- Loading splash ---------- */
+.splash{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-4);color:var(--text-dim);}
+.splash.hidden{display:none;}
+.splash .ring{width:38px;height:38px;border-radius:50%;border:3px solid var(--border-strong);border-top-color:var(--accent);animation:spin .7s linear infinite;}
+
+/* ---------- Toasts ---------- */
+#toasts{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:10px;max-width:min(360px,calc(100vw - 40px));}
+.toast{
+  display:flex;align-items:flex-start;gap:10px;padding:13px 15px;
+  background:var(--surface-3);border:1px solid var(--border-strong);border-left-width:4px;
+  border-radius:var(--radius-sm);box-shadow:var(--shadow);
+  animation:toastIn .25s cubic-bezier(.2,.8,.2,1);font-size:0.88rem;
+}
+.toast.out{animation:toastOut .25s ease forwards;}
+.toast.success{border-left-color:var(--accent);}
+.toast.error{border-left-color:var(--danger);}
+.toast.info{border-left-color:var(--info);}
+.toast .ticon{font-weight:800;line-height:1.3;}
+.toast.success .ticon{color:var(--accent);}
+.toast.error .ticon{color:#ff6b6f;}
+.toast.info .ticon{color:#7cb8f5;}
+.toast .tmsg{flex:1;min-width:0;word-break:break-word;}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px) translateY(6px);}to{opacity:1;transform:none;}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px);}}
+
+@media(max-width:560px){
+  main{padding:var(--space-4);}
+  header.topbar{padding:var(--space-3) var(--space-4);}
+  .uname small{display:none;}
+  .statgrid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<section class="splash" id="splash">
+  <div class="ring" aria-hidden="true"></div>
+  <p>Checking your session&hellip;</p>
+</section>
+
+<section class="gate hidden" id="gate">
+  <div class="gate-card">
+    <div class="glyph" aria-hidden="true">&#128274;</div>
+    <h1>Admin access required</h1>
+    <p id="gate-msg">You need to sign in with an admin Discord account to manage {{BRAND_NAME}}.</p>
+    <a class="discord-btn" href="/auth/login">
+      <span aria-hidden="true">&#128279;</span> Login with Discord
+    </a>
+  </div>
+</section>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot" aria-hidden="true"></span>
+      <span>{{BRAND_ADMIN_NAME}}</span>
+      <span class="muted">control panel</span>
+    </div>
+    <div class="userbox">
+      <div class="who">
+        <span id="user-avatar"></span>
+        <span class="uname" id="user-name"></span>
+      </div>
+      <button class="btn ghost sm" id="logout-btn" type="button">Logout</button>
+    </div>
+  </header>
+  <main id="cards">
+    <div class="grid">
+
+      <section class="card lg-6 col-8" aria-labelledby="h-stats">
+        <div class="head">
+          <h2 id="h-stats"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7"/><rect x="13" y="6" width="3" height="11"/></svg></span> Live Stats</h2>
+          <span class="badge live" id="live-badge"><span class="pulse" aria-hidden="true"></span> live</span>
+        </div>
+        <div class="body">
+          <div class="statgrid">
+            <div class="stat"><div class="k">Online now</div><div class="v accent" id="st-online">&mdash;</div></div>
+            <div class="stat"><div class="k">Total placements</div><div class="v" id="st-total">&mdash;</div></div>
+            <div class="stat"><div class="k">Board size</div><div class="v" id="st-size">&mdash;</div></div>
+            <div class="stat"><div class="k">Cooldown</div><div class="v" id="st-cd">&mdash;</div></div>
+          </div>
+          <div class="preview-wrap">
+            <canvas id="preview" width="2" height="2" role="img" aria-label="Live canvas preview"></canvas>
+          </div>
+          <p class="hint" id="st-meta">Auto-refreshing every 5s.</p>
+        </div>
+      </section>
+
+      <section class="card lg-4 col-4" aria-labelledby="h-expand">
+        <div class="head"><h2 id="h-expand"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></span> Expand Board</h2></div>
+        <div class="body">
+          <label class="field">Direction
+            <div class="seg" id="expand-dir" role="radiogroup" aria-label="Expand direction">
+              <span class="opt active" role="radio" tabindex="0" aria-checked="true" data-val="left">&larr; Left</span>
+              <span class="opt" role="radio" tabindex="0" aria-checked="false" data-val="right">Right &rarr;</span>
+              <span class="opt" role="radio" tabindex="0" aria-checked="false" data-val="up">&uarr; Up</span>
+              <span class="opt" role="radio" tabindex="0" aria-checked="false" data-val="down">&darr; Down</span>
+            </div>
+          </label>
+          <label class="field" for="expand-amt">Amount (pixels)
+            <input type="number" id="expand-amt" min="1" step="1" value="100" inputmode="numeric">
+          </label>
+          <button class="btn primary full" id="expand-btn" type="button">Expand board</button>
+          <p class="hint">Grows the canvas in the chosen direction. Existing art is preserved.</p>
+        </div>
+      </section>
+
+      <section class="card lg-4 col-4" aria-labelledby="h-cooldown">
+        <div class="head"><h2 id="h-cooldown"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></span> Cooldown</h2></div>
+        <div class="body">
+          <label class="field" for="cd-input">Global cooldown (seconds)
+            <input type="number" id="cd-input" min="0" step="1" placeholder="5" inputmode="numeric">
+          </label>
+          <button class="btn primary full" id="cd-btn" type="button">Set cooldown</button>
+          <p class="hint">Applies to every player's placement delay.</p>
+        </div>
+      </section>
+
+      <section class="card lg-4 col-4" aria-labelledby="h-super">
+        <div class="head"><h2 id="h-super"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21v-4l11-11 4 4L7 21z"/><line x1="13" y1="6" x2="18" y2="11"/></svg></span> Superpaint</h2></div>
+        <div class="body">
+          <div class="row tight">
+            <label class="field" for="sp-x1">X1<input type="number" id="sp-x1" min="0" step="1" value="0" inputmode="numeric"></label>
+            <label class="field" for="sp-y1">Y1<input type="number" id="sp-y1" min="0" step="1" value="0" inputmode="numeric"></label>
+          </div>
+          <div class="row tight">
+            <label class="field" for="sp-x2">X2<input type="number" id="sp-x2" min="0" step="1" value="0" inputmode="numeric"></label>
+            <label class="field" for="sp-y2">Y2<input type="number" id="sp-y2" min="0" step="1" value="0" inputmode="numeric"></label>
+          </div>
+          <button class="btn danger full" id="sp-btn" type="button">Clear rectangle</button>
+          <p class="hint">Resets every pixel in the rectangle to white (empty).</p>
+        </div>
+      </section>
+
+      <section class="card lg-6 col-8" aria-labelledby="h-miles">
+        <div class="head">
+          <h2 id="h-miles"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span> Milestones</h2>
+          <span class="hint" id="miles-count"></span>
+        </div>
+        <div class="body">
+          <div class="row tight">
+            <label class="field" for="ms-when">Trigger at
+              <input type="datetime-local" id="ms-when">
+            </label>
+            <label class="field" for="ms-dir" style="flex:0 0 110px;">Direction
+              <select id="ms-dir">
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+                <option value="up">Up</option>
+                <option value="down">Down</option>
+              </select>
+            </label>
+            <label class="field" for="ms-amt" style="flex:0 0 90px;">Amount
+              <input type="number" id="ms-amt" min="1" step="1" value="100" inputmode="numeric">
+            </label>
+          </div>
+          <label class="field" for="ms-label">Label (optional)
+            <input type="text" id="ms-label" placeholder="e.g. 1k online expansion" maxlength="120">
+          </label>
+          <button class="btn primary full" id="ms-add" type="button">Schedule milestone</button>
+          <hr class="divider">
+          <div class="list" id="ms-list" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="card lg-6 col-8" aria-labelledby="h-bans">
+        <div class="head">
+          <h2 id="h-bans"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/></svg></span> Bans</h2>
+        </div>
+        <div class="body">
+          <div class="inline">
+            <label class="field" for="ban-type" style="flex:0 0 110px;">Type
+              <select id="ban-type">
+                <option value="user">User ID</option>
+                <option value="ip">IP</option>
+              </select>
+            </label>
+            <label class="field" for="ban-value" style="flex:1 1 160px;">Value
+              <input type="text" id="ban-value" placeholder="Discord ID or IP">
+            </label>
+            <button class="btn danger" id="ban-btn" type="button" style="flex:0 0 auto;">Ban</button>
+          </div>
+          <hr class="divider">
+          <div class="list" id="ban-list" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="card lg-8 col-8" aria-labelledby="h-act">
+        <div class="head">
+          <h2 id="h-act"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 3 3 8 8 8"/></svg></span> Recent Activity</h2>
+          <div class="head-actions">
+            <span class="hint" id="act-meta"></span>
+            <button class="btn ghost sm" id="act-refresh" type="button">Refresh</button>
+          </div>
+        </div>
+        <div class="body">
+          <div class="table-scroll">
+            <table class="activity">
+              <thead>
+                <tr>
+                  <th scope="col">Color</th>
+                  <th scope="col">Coord</th>
+                  <th scope="col">Discord ID</th>
+                  <th scope="col">IP</th>
+                  <th scope="col">When</th>
+                </tr>
+              </thead>
+              <tbody id="act-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const el = {
+  splash: $("splash"), gate: $("gate"), gateMsg: $("gate-msg"), app: $("app"),
+  toasts: $("toasts"),
+  userAvatar: $("user-avatar"), userName: $("user-name"), logout: $("logout-btn"),
+};
+
+let COLORS = [];
+let BOARD = { width: 0, height: 0 };
+let statsTimer = null;
+let activityTimer = null;
+
+function escapeHtml(v){
+  return String(v).replace(/[&<>"']/g, (c) => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function toast(message, kind = "info", ttl = 4200){
+  const node = document.createElement("div");
+  node.className = "toast " + kind;
+  node.setAttribute("role", kind === "error" ? "alert" : "status");
+  const sym = kind === "success" ? "\u2713" : kind === "error" ? "\u2715" : "\u2139";
+  node.innerHTML = '<span class="ticon" aria-hidden="true">' + sym + '</span>' +
+                   '<span class="tmsg">' + escapeHtml(message) + '</span>';
+  el.toasts.appendChild(node);
+  const remove = () => {
+    node.classList.add("out");
+    node.addEventListener("animationend", () => node.remove(), { once: true });
+    setTimeout(() => node.remove(), 400);
+  };
+  setTimeout(remove, ttl);
+}
+
+async function api(path, options = {}){
+  const opts = Object.assign({ credentials: "same-origin", headers: {} }, options);
+  if (opts.body !== undefined && typeof opts.body !== "string"){
+    opts.headers = Object.assign({ "Content-Type": "application/json" }, opts.headers);
+    opts.body = JSON.stringify(opts.body);
+  }
+  const res = await fetch(path, opts);
+  let data = null;
+  const text = await res.text();
+  if (text){
+    try { data = JSON.parse(text); }
+    catch (parseErr) { data = { error: "Unexpected response from server." }; }
+  }
+  if (!res.ok){
+    const msg = (data && data.error) ? data.error : ("Request failed (" + res.status + ")");
+    const err = new Error(msg);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+function withBusy(btn, fn){
+  return async (...args) => {
+    if (btn) { btn.classList.add("busy"); btn.disabled = true; }
+    try { return await fn(...args); }
+    finally { if (btn) { btn.classList.remove("busy"); btn.disabled = false; } }
+  };
+}
+
+function relativeTime(iso){
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "\u2014";
+  const diff = Date.now() - t;
+  const s = Math.round(diff / 1000);
+  if (s < 5) return "just now";
+  if (s < 60) return s + "s ago";
+  const m = Math.round(s / 60);
+  if (m < 60) return m + "m ago";
+  const h = Math.round(m / 60);
+  if (h < 24) return h + "h ago";
+  const d = Math.round(h / 24);
+  return d + "d ago";
+}
+
+function absoluteTime(iso){
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "";
+  return new Date(t).toLocaleString();
+}
+
+function decodeCanvas(base64, width, height){
+  const bin = atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const total = width * height;
+  const indices = new Uint8Array(total);
+  for (let p = 0; p < total; p++){
+    const byteIndex = p >> 1;
+    const byte = bytes[byteIndex] || 0;
+    const isHigh = (p & 1) === 0;
+    indices[p] = isHigh ? (byte >> 4) & 0xF : byte & 0xF;
+  }
+  return indices;
+}
+
+function drawPreview(base64, width, height){
+  const cvs = $("preview");
+  if (!width || !height || !base64){ return; }
+  const indices = decodeCanvas(base64, width, height);
+  cvs.width = width;
+  cvs.height = height;
+  const c = cvs.getContext("2d");
+  const img = c.createImageData(width, height);
+  for (let p = 0; p < indices.length; p++){
+    const hex = COLORS[indices[p]] || "#FFFFFF";
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const o = p * 4;
+    img.data[o] = r; img.data[o + 1] = g; img.data[o + 2] = b; img.data[o + 3] = 255;
+  }
+  c.putImageData(img, 0, 0);
+  const maxSide = 400;
+  const ratio = Math.min(maxSide / width, maxSide / height, 1);
+  cvs.style.width = Math.max(1, Math.round(width * ratio)) + "px";
+  cvs.style.height = Math.max(1, Math.round(height * ratio)) + "px";
+}
+
+function showGate(msg){
+  el.splash.classList.add("hidden");
+  el.app.classList.remove("visible");
+  el.gate.classList.remove("hidden");
+  if (msg) el.gateMsg.textContent = msg;
+}
+
+function showApp(me){
+  el.splash.classList.add("hidden");
+  el.gate.classList.add("hidden");
+  el.app.classList.add("visible");
+
+  el.userName.innerHTML = escapeHtml(me.username || "Admin") + "<small>Discord admin</small>";
+  if (me.avatar){
+    const img = document.createElement("img");
+    img.className = "avatar";
+    img.alt = "";
+    img.src = "https://cdn.discordapp.com/avatars/" + encodeURIComponent(me.id) +
+              "/" + encodeURIComponent(me.avatar) + ".png";
+    img.onerror = () => { el.userAvatar.innerHTML = placeholderAvatar(me.username); };
+    el.userAvatar.innerHTML = "";
+    el.userAvatar.appendChild(img);
+  } else {
+    el.userAvatar.innerHTML = placeholderAvatar(me.username);
+  }
+}
+
+function placeholderAvatar(name){
+  const initial = (name || "?").trim().charAt(0).toUpperCase() || "?";
+  return '<span class="avatar placeholder" aria-hidden="true">' + escapeHtml(initial) + '</span>';
+}
+
+async function boot(){
+  let me;
+  try {
+    me = await api("/api/me");
+  } catch (err) {
+    showGate("Could not verify your session. Please try logging in again.");
+    return;
+  }
+  if (!me || !me.loggedIn){
+    showGate("You need to sign in with an admin Discord account to manage {{BRAND_NAME}}.");
+    return;
+  }
+  if (!me.isAdmin){
+    showGate("This account is signed in but is not an admin. Ask an existing admin for access.");
+    return;
+  }
+  showApp(me);
+  initControls();
+  await refreshAll();
+  statsTimer = setInterval(refreshStats, 5000);
+  activityTimer = setInterval(refreshActivity, 10000);
+}
+
+el.logout.addEventListener("click", withBusy(el.logout, async () => {
+  try {
+    await api("/auth/logout", { method: "POST" });
+  } catch (err) {
+    toast(err.message || "Logout failed.", "error");
+    return;
+  }
+  window.location.reload();
+}));
+
+async function refreshAll(){
+  await Promise.allSettled([
+    refreshStats(),
+    refreshMilestones(),
+    refreshBans(),
+    refreshActivity(),
+  ]);
+}
+
+async function refreshStats(){
+  let s;
+  try { s = await api("/api/admin/stats"); }
+  catch (err) { $("st-meta").textContent = "Stats unavailable: " + err.message; return; }
+
+  COLORS = Array.isArray(s.colors) ? s.colors : COLORS;
+  BOARD = { width: s.width, height: s.height };
+
+  $("st-online").textContent = s.online;
+  $("st-total").textContent = Number(s.totalPlacements).toLocaleString();
+  $("st-size").textContent = s.width + "\u00d7" + s.height;
+  $("st-cd").textContent = s.cooldownSeconds + "s";
+  $("st-meta").textContent = "Updated " + new Date().toLocaleTimeString() + " \u00b7 auto every 5s";
+
+  const cd = $("cd-input");
+  if (cd && document.activeElement !== cd && cd.value === "") cd.placeholder = String(s.cooldownSeconds);
+
+  drawPreview(s.canvas, s.width, s.height);
+}
+
+function bindExpand(){
+  const seg = $("expand-dir");
+  const opts = Array.from(seg.querySelectorAll(".opt"));
+  function select(opt){
+    opts.forEach((o) => { o.classList.remove("active"); o.setAttribute("aria-checked", "false"); });
+    opt.classList.add("active"); opt.setAttribute("aria-checked", "true");
+  }
+  opts.forEach((opt) => {
+    opt.addEventListener("click", () => select(opt));
+    opt.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); select(opt); }
+    });
+  });
+
+  $("expand-btn").addEventListener("click", withBusy($("expand-btn"), async () => {
+    const direction = seg.querySelector(".opt.active").dataset.val;
+    const amount = parseInt($("expand-amt").value, 10);
+    if (!Number.isFinite(amount) || amount <= 0){ toast("Enter a positive amount.", "error"); return; }
+    try {
+      const r = await api("/api/admin/expand", { method: "POST", body: { direction, amount } });
+      toast("Board expanded " + direction + " by " + amount + "px \u2192 " + r.width + "\u00d7" + r.height, "success");
+      await refreshStats();
+    } catch (err) { toast(err.message, "error"); }
+  }));
+}
+
+function bindCooldown(){
+  $("cd-btn").addEventListener("click", withBusy($("cd-btn"), async () => {
+    const seconds = parseInt($("cd-input").value, 10);
+    if (!Number.isFinite(seconds) || seconds < 0){ toast("Enter a non-negative number of seconds.", "error"); return; }
+    try {
+      await api("/api/admin/cooldown", { method: "POST", body: { seconds } });
+      toast("Cooldown set to " + seconds + "s.", "success");
+      $("cd-input").value = "";
+      await refreshStats();
+    } catch (err) { toast(err.message, "error"); }
+  }));
+}
+
+function bindSuperpaint(){
+  $("sp-btn").addEventListener("click", withBusy($("sp-btn"), async () => {
+    const x1 = parseInt($("sp-x1").value, 10);
+    const y1 = parseInt($("sp-y1").value, 10);
+    const x2 = parseInt($("sp-x2").value, 10);
+    const y2 = parseInt($("sp-y2").value, 10);
+    if ([x1, y1, x2, y2].some((v) => !Number.isFinite(v))){ toast("All four coordinates are required.", "error"); return; }
+    if ([x1, y1, x2, y2].some((v) => v < 0)){ toast("Coordinates must be zero or positive.", "error"); return; }
+    if (BOARD.width && (x1 >= BOARD.width || x2 >= BOARD.width || y1 >= BOARD.height || y2 >= BOARD.height)){
+      toast("Coordinates exceed board size (" + BOARD.width + "\u00d7" + BOARD.height + ").", "error"); return;
+    }
+    try {
+      await api("/api/admin/superpaint", { method: "POST", body: { x1, y1, x2, y2 } });
+      toast("Cleared rectangle (" + x1 + "," + y1 + ")\u2192(" + x2 + "," + y2 + ").", "success");
+      await refreshStats();
+    } catch (err) { toast(err.message, "error"); }
+  }));
+}
+
+async function refreshMilestones(){
+  const list = $("ms-list");
+  let items;
+  try { items = await api("/api/admin/milestones"); }
+  catch (err) { list.innerHTML = '<div class="empty">Could not load milestones: ' + escapeHtml(err.message) + '</div>'; return; }
+
+  $("miles-count").textContent = items.length ? (items.length + " scheduled") : "";
+  if (!items.length){ list.innerHTML = '<div class="empty">No milestones scheduled.</div>'; return; }
+
+  list.innerHTML = "";
+  items.forEach((m) => {
+    const row = document.createElement("div");
+    row.className = "li";
+    const labelTxt = m.label ? m.label : (m.direction + " +" + m.amount + "px");
+    const badge = m.fired
+      ? '<span class="badge fired">fired</span>'
+      : '<span class="badge pending">pending</span>';
+    const sub = m.direction + " +" + m.amount + "px \u00b7 " +
+                absoluteTime(m.triggerAt) + (m.fired && m.firedAt ? (" \u00b7 fired " + relativeTime(m.firedAt)) : "");
+    row.innerHTML =
+      '<div class="li-main"><span class="t">' + escapeHtml(labelTxt) + ' ' + badge + '</span>' +
+      '<span class="s">' + escapeHtml(sub) + '</span></div>';
+    const del = document.createElement("button");
+    del.className = "btn danger sm";
+    del.type = "button";
+    del.textContent = "Delete";
+    del.addEventListener("click", withBusy(del, async () => {
+      try {
+        await api("/api/admin/milestones/" + encodeURIComponent(m.id), { method: "DELETE" });
+        toast("Milestone deleted.", "success");
+        await refreshMilestones();
+      } catch (err) { toast(err.message, "error"); }
+    }));
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+}
+
+function bindMilestones(){
+  $("ms-add").addEventListener("click", withBusy($("ms-add"), async () => {
+    const whenRaw = $("ms-when").value;
+    const direction = $("ms-dir").value;
+    const amount = parseInt($("ms-amt").value, 10);
+    const label = $("ms-label").value.trim();
+    if (!whenRaw){ toast("Pick a trigger date/time.", "error"); return; }
+    const ts = new Date(whenRaw);
+    if (Number.isNaN(ts.getTime())){ toast("Invalid trigger time.", "error"); return; }
+    if (!Number.isFinite(amount) || amount <= 0){ toast("Enter a positive amount.", "error"); return; }
+    try {
+      await api("/api/admin/milestones", {
+        method: "POST",
+        body: { triggerAt: ts.toISOString(), direction, amount, label },
+      });
+      toast("Milestone scheduled.", "success");
+      $("ms-label").value = "";
+      await refreshMilestones();
+    } catch (err) { toast(err.message, "error"); }
+  }));
+}
+
+async function refreshBans(){
+  const list = $("ban-list");
+  let data;
+  try { data = await api("/api/admin/bans"); }
+  catch (err) { list.innerHTML = '<div class="empty">Could not load bans: ' + escapeHtml(err.message) + '</div>'; return; }
+
+  const users = Array.isArray(data.users) ? data.users : [];
+  const ips = Array.isArray(data.ips) ? data.ips : [];
+  if (!users.length && !ips.length){ list.innerHTML = '<div class="empty">No active bans.</div>'; return; }
+
+  list.innerHTML = "";
+  const addRow = (type, value) => {
+    const row = document.createElement("div");
+    row.className = "li";
+    row.innerHTML =
+      '<div class="li-main"><span class="t">' + (type === "user" ? "User" : "IP") + '</span>' +
+      '<span class="s">' + escapeHtml(value) + '</span></div>';
+    const btn = document.createElement("button");
+    btn.className = "btn ghost sm";
+    btn.type = "button";
+    btn.textContent = "Unban";
+    btn.addEventListener("click", withBusy(btn, async () => {
+      try {
+        await api("/api/admin/unban", { method: "POST", body: { type, value } });
+        toast("Unbanned " + type + " " + value + ".", "success");
+        await refreshBans();
+      } catch (err) { toast(err.message, "error"); }
+    }));
+    row.appendChild(btn);
+    list.appendChild(row);
+  };
+  users.forEach((u) => addRow("user", u));
+  ips.forEach((ip) => addRow("ip", ip));
+}
+
+function bindBans(){
+  $("ban-btn").addEventListener("click", withBusy($("ban-btn"), async () => {
+    const type = $("ban-type").value;
+    const value = $("ban-value").value.trim();
+    if (!value){ toast("Enter a Discord ID or IP to ban.", "error"); return; }
+    try {
+      await api("/api/admin/ban", { method: "POST", body: { type, value } });
+      toast("Banned " + type + " " + value + ".", "success");
+      $("ban-value").value = "";
+      await refreshBans();
+    } catch (err) { toast(err.message, "error"); }
+  }));
+}
+
+async function refreshActivity(){
+  const body = $("act-body");
+  let feed;
+  try { feed = await api("/api/admin/activity?count=50"); }
+  catch (err) { body.innerHTML = '<tr><td colspan="5" class="empty">Could not load activity: ' + escapeHtml(err.message) + '</td></tr>'; return; }
+
+  $("act-meta").textContent = feed.length + " events \u00b7 auto every 10s";
+  if (!feed.length){ body.innerHTML = '<tr><td colspan="5" class="empty">No placements yet.</td></tr>'; return; }
+
+  body.innerHTML = "";
+  feed.forEach((e) => {
+    const tr = document.createElement("tr");
+    const color = COLORS[e.colorIndex] || "#000000";
+    const swatch = '<span class="swatch" style="background:' + escapeHtml(color) + '" title="index ' + e.colorIndex + '"></span>';
+    tr.innerHTML =
+      '<td>' + swatch + '</td>' +
+      '<td class="coord">' + e.x + ", " + e.y + '</td>' +
+      '<td class="mono">' + escapeHtml(e.discordId || "\u2014") + '</td>' +
+      '<td class="mono">' + escapeHtml(e.ip || "\u2014") + '</td>' +
+      '<td class="muted-time" title="' + escapeHtml(absoluteTime(e.timestamp)) + '">' + escapeHtml(relativeTime(e.timestamp)) + '</td>';
+    body.appendChild(tr);
+  });
+}
+
+let controlsReady = false;
+function initControls(){
+  if (controlsReady) return;
+  controlsReady = true;
+  bindExpand();
+  bindCooldown();
+  bindSuperpaint();
+  bindMilestones();
+  bindBans();
+  $("act-refresh").addEventListener("click", withBusy($("act-refresh"), refreshActivity));
+}
+
+boot();
+</script>
+</body>
+</html>
